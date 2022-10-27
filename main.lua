@@ -6,10 +6,19 @@
 
 local composer = require( 'composer' )
 local physics = require( 'physics' )
+local mazeGenerator = require ( 'src.mazeGenerator' )
+
 
 physics.start()
 --physics.setScale( 60 ) -- a value that seems good for small objects (based on playtesting)
 physics.setGravity( 0, 0 ) -- overhead view, therefore no gravity vector
+
+
+mazeGenerator.init(4, 7, 2, 6)
+
+mazeGenerator.generate()
+
+mazeGenerator.printToScreen()
 
 
 display.setStatusBar( display.HiddenStatusBar )
@@ -42,18 +51,18 @@ centerY = display.contentCenterY
 -- Create a bubble
 local bubble = display.newCircle(centerX, centerY, 20)
 bubble:setFillColor( 0.5, 0.5, 1 )
-physics.addBody( bubble, 'dynamic', { density=1.0, friction=0.3, bounce=0.2, radius=bubble.radius } )
+physics.addBody( bubble, 'dynamic', { density=0.6, friction=0.5, bounce=0.2, radius=bubble.radius } )
 
-local wall1 = display.newRect( centerX, centerY + 200, 500, 10)	-- bottom
+local wall1 = display.newRect( centerX, display.contentHeight + 50, display.contentWidth, 10)	-- bottom
 physics.addBody( wall1, 'static', { desity=3.0, bounce=0.2 })
 
-local wall2 = display.newRect( centerX, centerY - 200, 500, 10) -- top
+local wall2 = display.newRect( centerX, -50, display.contentWidth, 10) -- top
 physics.addBody( wall2, 'static', { desity=3, friction=0.5, bounce=0.3 })
 
-local wall3 = display.newRect( centerX - 150, centerY, 10, 500) --left
+local wall3 = display.newRect( centerX - 200, centerY, 10, display.contentHeight) --left
 physics.addBody( wall3, 'static', { desity=3, friction=0.5, bounce=0.3 })
 
-local wall4 = display.newRect( centerX + 150, centerY, 10, 500) --right
+local wall4 = display.newRect( centerX + 200, centerY, 10, display.contentHeight) --right
 physics.addBody( wall4, 'static', { desity=3, friction=0.5, bounce=0.3 })
 
 
@@ -77,10 +86,10 @@ local text2 = display.newText({
 
 local function onAccelerate( event )
 
-	text1.text = 'xGravity: ' .. event.xGravity
-	text2.text = 'yGravity: ' .. event.yGravity
+	--text1.text = 'xGravity: ' .. event.xGravity
+	--text2.text = 'yGravity: ' .. event.yGravity
 
-	local multiplyer = 2
+	local multiplyer = 0.5
 	local newGravityX = event.xGravity * multiplyer
 	local newGravityY = event.yGravity * -multiplyer
 
