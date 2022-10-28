@@ -14,7 +14,7 @@ physics.start()
 physics.setGravity( 0, 0 ) -- overhead view, therefore no gravity vector
 
 
-mazeGenerator.init(4, 7, 2, 6)
+mazeGenerator.init(4, 8, 2, 6)
 
 mazeGenerator.generate()
 
@@ -49,7 +49,7 @@ centerY = display.contentCenterY
 
 
 -- Create a bubble
-local bubble = display.newCircle(centerX, centerY, 20)
+local bubble = display.newCircle(centerX+41, centerY+20, 15)
 bubble:setFillColor( 0.5, 0.5, 1 )
 physics.addBody( bubble, 'dynamic', { density=0.6, friction=0.5, bounce=0.2, radius=bubble.radius } )
 

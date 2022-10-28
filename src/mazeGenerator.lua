@@ -10,10 +10,7 @@ local displayHeight = display.contentHeight
 
 
 local cellGroup = display.newGroup()
-cellGroup.x = 0--display.contentCenterX
-cellGroup.y = 0--display.contentCenterY
---cellGroup.anchorChildren = true
-
+cellGroup.x = 10
 
 
 local M = {}
@@ -53,39 +50,44 @@ local function Cell( x, y, width )
 
     cell.draw = function()
 
-        local x = cell.x * cell.width
-        local y = cell.y * cell.width
+        local x = cell.x * cell.width - cell.width
+        local y = cell.y * cell.width - cell.width
 
         if cell.walls['NORTH'] then
             local lineNorth = display.newLine( cellGroup, x, y, x + cell.width, y )
             lineNorth:setStrokeColor(1,.5,1)
             lineNorth.strokeWidth = 5
-            -- physics.addBody( lineNorth, 'static', { desity=3, friction=0.5, bounce=0.3 })
+            physics.addBody( lineNorth, 'static', { desity=3, friction=0.5, bounce=0.3 })
         end
 
         if cell.walls['EAST'] then
             local lineEast = display.newLine( cellGroup, x + cell.width, y, x + cell.width, y + cell.width )
             lineEast:setStrokeColor(1,0,0)
             lineEast.strokeWidth = 5
-            -- physics.addBody( lineEast, 'static', { desity=3, friction=0.5, bounce=0.3 })
+            physics.addBody( lineEast, 'static', { desity=3, friction=0.5, bounce=0.3 })
         end
 
         if cell.walls['SOUTH'] then
             local lineSouth = display.newLine( cellGroup, x + cell.width, y + cell.width, x, y + cell.width )
             lineSouth:setStrokeColor(0,1,0)
             lineSouth.strokeWidth = 5
-            -- physics.addBody( lineSouth, 'static', { desity=3, friction=0.5, bounce=0.3 })
+             physics.addBody( lineSouth, 'static', { desity=3, friction=0.5, bounce=0.3 })
         end
 
         if cell.walls['WEST'] then
             local lineWest = display.newLine( cellGroup, x, y + cell.width, x, y )
             lineWest:setStrokeColor(0,0,1)
             lineWest.strokeWidth = 5
-            -- physics.addBody( lineWest, 'static', { desity=3, friction=0.5, bounce=0.3 })
+             physics.addBody( lineWest, 'static', { desity=3, friction=0.5, bounce=0.3 })
         end
 
         if cell.state == CellStates.VISITED then
-            display.newRect( cellGroup, (cell.x*cell.width + cell.width / 2), (cell.y*cell.width + cell.width / 2), cell.width/6, cell.width/6 )
+            display.newRect( cellGroup,
+                x + cell.width/2,
+                y + cell.width/2, 
+                cell.width/6, 
+                cell.width/6 
+            )
         end
 
     end
@@ -203,8 +205,6 @@ local function removeWalls(curCell, nxtCell)
         curCell.removeWall('EAST')
         nxtCell.removeWall('WEST')
 
-        --table.remove( curCell.walls, CellStates.WEST ) 
-        --table.remove( nxtCell.walls, CellStates.EAST ) 
     end
 
     -- Remove northern wall
@@ -212,8 +212,6 @@ local function removeWalls(curCell, nxtCell)
         print("Remove: northern wall")
         curCell.removeWall('NORTH')
         nxtCell.removeWall('SOUTH')
-        --table.remove( curCell.walls, CellStates.NORTH ) 
-        --table.remove( nxtCell.walls, CellStates.SOUTH ) 
     end
 
     -- Remove southern wall
@@ -221,9 +219,6 @@ local function removeWalls(curCell, nxtCell)
         print("Remove: southern wall")
         curCell.removeWall('SOUTH')
         nxtCell.removeWall('NORTH')
-        --table.remove( curCell.walls, CellStates.SOUTH ) 
-        --table.remove( nxtCell.walls, CellStates.NORTH ) 
-
     end
 
 end
@@ -243,7 +238,6 @@ function M.generate()
         if #neighbors > 0 then
     
             -- choose random
-            math.randomseed(os.time())
             local nextIndex = math.random(1, #neighbors)
     
             print('cur: ('..currentCell.x..','..currentCell.y..')')
@@ -261,13 +255,7 @@ function M.generate()
         else
             currentCell = visitedStack.pop()
         end
-    end--]]
-
-    
-    
-    --while (visitedCount < #mazeArray) do
-        
-    --end
+    end
 
 end
 
@@ -282,7 +270,8 @@ function M.printToScreen()
 
     end
 
-    cellGroup.x = cellGroup.x - cellW
+    
+
 end
 
  
