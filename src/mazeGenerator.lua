@@ -4,13 +4,13 @@
 ------------------------------------------------------------------------
 
 local algoritms = require( 'src.algorithms' )
+require('src.maze.Cell')
 
 local displayWidth = display.contentWidth
 local displayHeight = display.contentHeight
 
 
 local cellGroup = display.newGroup()
-cellGroup.x = 10
 
 
 local M = {}
@@ -24,76 +24,6 @@ local visitedStack
 local currentCell
 
 local cellWidth
-
-local CellStates = {
-    VISITED = 6
-}
-
-local function Cell( x, y, width ) 
-
-    local cell = {
-        x = x,
-        y = y,
-        width= width,
-        walls = {
-            NORTH = true,
-            EAST  = true,
-            SOUTH = true,
-            WEST  = true
-        } ,
-        state = CellStates.EMPTY
-    }
-
-    cell.removeWall = function(wall)
-        cell.walls[wall] = false
-    end
-
-    cell.draw = function()
-
-        local x = cell.x * cell.width - cell.width
-        local y = cell.y * cell.width - cell.width
-
-        if cell.walls['NORTH'] then
-            local lineNorth = display.newLine( cellGroup, x, y, x + cell.width, y )
-            lineNorth:setStrokeColor(1,.5,1)
-            lineNorth.strokeWidth = 5
-            physics.addBody( lineNorth, 'static', { desity=3, friction=0.5, bounce=0.3 })
-        end
-
-        if cell.walls['EAST'] then
-            local lineEast = display.newLine( cellGroup, x + cell.width, y, x + cell.width, y + cell.width )
-            lineEast:setStrokeColor(1,0,0)
-            lineEast.strokeWidth = 5
-            physics.addBody( lineEast, 'static', { desity=3, friction=0.5, bounce=0.3 })
-        end
-
-        if cell.walls['SOUTH'] then
-            local lineSouth = display.newLine( cellGroup, x + cell.width, y + cell.width, x, y + cell.width )
-            lineSouth:setStrokeColor(0,1,0)
-            lineSouth.strokeWidth = 5
-             physics.addBody( lineSouth, 'static', { desity=3, friction=0.5, bounce=0.3 })
-        end
-
-        if cell.walls['WEST'] then
-            local lineWest = display.newLine( cellGroup, x, y + cell.width, x, y )
-            lineWest:setStrokeColor(0,0,1)
-            lineWest.strokeWidth = 5
-             physics.addBody( lineWest, 'static', { desity=3, friction=0.5, bounce=0.3 })
-        end
-
-        if cell.state == CellStates.VISITED then
-            display.newRect( cellGroup,
-                x + cell.width/2,
-                y + cell.width/2, 
-                cell.width/6, 
-                cell.width/6 
-            )
-        end
-
-    end
-
-    return cell
-end
 
 
 -- Initialize the maze
@@ -113,14 +43,20 @@ function M.init( width, height, startX, startY )
     -- init mazeArray
     for y = 1, mazeHeight  do
         for x = 1, mazeWidth  do
-            table.insert( mazeArray, Cell(x, y, displayWidth / mazeWidth) )
+            table.insert( mazeArray, Cell:new(x, y, displayWidth/mazeWidth, cellGroup) )
         end
+    end
+
+
+    for i = 1, #mazeArray do
+        print(i..". ("..mazeArray[i].x..","..mazeArray[i].y..") ")
+
     end
 
 
     currentCell = mazeArray[ mazeWidth*mazeHeight-1 ]
     visitedStack.push(currentCell)
-    currentCell.state = CellStates.VISITED
+    currentCell.visited = true
     visitedCount = visitedCount + 1
 
 end
@@ -152,25 +88,25 @@ local function checkNeighbors(cell)
     print('s: ' .. southIndex)
     print('w: ' .. westIndex)
 
-    if northIndex ~= -1 and mazeArray[ northIndex ].state == CellStates.EMPTY then
+    if northIndex ~= -1 and not mazeArray[ northIndex ].visited then
         table.insert( neighbors, mazeArray[ northIndex ] )
 
         print('north: ('..mazeArray[ northIndex ].x..','..mazeArray[ northIndex ].y..')')
     end
 
-    if eastIndex ~= -1 and mazeArray[ eastIndex ].state == CellStates.EMPTY then
+    if eastIndex ~= -1 and not mazeArray[ eastIndex ].visited then
         table.insert( neighbors, mazeArray[ eastIndex ] )
 
         print('east:  ('..mazeArray[ eastIndex ].x..','..mazeArray[ eastIndex ].y..')')
     end
 
-    if southIndex ~= -1 and mazeArray[ southIndex ].state == CellStates.EMPTY then
+    if southIndex ~= -1 and not mazeArray[ southIndex ].visited then
         table.insert( neighbors, mazeArray[ southIndex ] )
 
         print('south: ('..mazeArray[ southIndex ].x..','..mazeArray[ southIndex ].y..')')
     end
 
-    if westIndex ~= -1 and mazeArray[ westIndex ].state == CellStates.EMPTY then
+    if westIndex ~= -1 and not mazeArray[ westIndex ].visited then
         table.insert( neighbors, mazeArray[ westIndex ] )
         
         print('west:  ('..mazeArray[ westIndex ].x..','..mazeArray[ westIndex ].y..')')
@@ -193,8 +129,8 @@ local function removeWalls(curCell, nxtCell)
     if x == 1 then
         print("Remove: eastern wall")
         
-        curCell.removeWall('WEST')
-        nxtCell.removeWall('EAST')
+        curCell.wallWest = false
+        nxtCell.wallEast = false
 
     end
 
@@ -202,23 +138,23 @@ local function removeWalls(curCell, nxtCell)
     if x == -1 then
         print("Remove: western wall")
 
-        curCell.removeWall('EAST')
-        nxtCell.removeWall('WEST')
+        curCell.wallEast = false
+        nxtCell.wallWest = false
 
     end
 
     -- Remove northern wall
     if y == 1 then
         print("Remove: northern wall")
-        curCell.removeWall('NORTH')
-        nxtCell.removeWall('SOUTH')
+        curCell.wallNorth = false
+        nxtCell.wallSouth = false
     end
 
     -- Remove southern wall
     if y == -1 then
         print("Remove: southern wall")
-        curCell.removeWall('SOUTH')
-        nxtCell.removeWall('NORTH')
+        curCell.wallSouth = false
+        nxtCell.wallNorth = false
     end
 
 end
@@ -246,7 +182,7 @@ function M.generate()
             removeWalls(currentCell, neighbors[nextIndex])
     
             currentCell = neighbors[nextIndex]
-            currentCell.state = CellStates.VISITED
+            currentCell.visited = true
     
             visitedCount = visitedCount + 1
     
@@ -262,11 +198,9 @@ end
 function M.printToScreen() 
 
 
-    local cellW = displayWidth / mazeWidth -1 
-
     for i = 1, #mazeArray do
 
-        mazeArray[ i ].draw()
+        mazeArray[ i ]:draw()
 
     end
 
