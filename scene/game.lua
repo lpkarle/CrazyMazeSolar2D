@@ -1,5 +1,4 @@
 local composer = require( "composer" )
-local widget = require( 'widget' )
 
 local scene = composer.newScene()
 
@@ -9,17 +8,14 @@ print( '[+] Game: START' )
 local centerX = display.contentCenterX
 local centerY = display.contentCenterY
 
-local rec
+local background
 local btnBackToMenu
 
 
 local function onPressBackToMenu( event )
- 
-    if ( 'ended' == event.phase ) then
-        print( "BackToMenu was pressed and released" )
 
-       composer.gotoScene( 'scene.menu', { time = 1000, effect = 'flip' } )
-    end
+       composer.gotoScene( 'scene.menu', { effect = 'fromRight', time = 500 } )
+       return true
 end
 
 -- create()
@@ -30,16 +26,23 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
  
-    rec =display.newRect( display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
-    rec:setFillColor( 1, 0, 0 )
+    background =display.newRect( sceneGroup, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
+    background:setFillColor( 0, 0, 0 )
 
-    btnStartGame = widget.newButton( {
-        id = 'backToMenu',
-        label = 'Back To Menu',
+    local text = display.newText( {
+        parent=sceneGroup,
+        text='Game',
         x = centerX,
-        y = centerY,
-        onEvent = onPressBackToMenu
+        y = 200,
+        fontSize = 50,
+        align = 'center'
     } )
+
+    btnBackToMenu = display.newRect( sceneGroup, centerX, centerY, 200, 50 )
+
+    btnBackToMenu:addEventListener( 'tap', onPressBackToMenu )
+
+    
 end
  
  
@@ -80,8 +83,6 @@ function scene:hide( event )
     elseif ( phase == "did" ) then
         
         print( '[+] Game: HIDE DID' )
-
-        composer.removeScene( 'scene.Game' )
 
         -- Code here runs immediately after the scene goes entirely off screen
  

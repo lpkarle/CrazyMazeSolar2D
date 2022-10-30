@@ -5,21 +5,6 @@
 -----------------------------------------------------------------------------------------
 
 local composer = require( 'composer' )
-local physics = require( 'physics' )
-local mazeGenerator = require ( 'src.mazeGenerator' )
-
-
-physics.start()
---physics.setScale( 60 ) -- a value that seems good for small objects (based on playtesting)
-physics.setGravity( 0, 0 ) -- overhead view, therefore no gravity vector
-
-
-mazeGenerator.init(4, 8, 2, 6)
-
-mazeGenerator.generate()
-
-mazeGenerator.printToScreen()
-
 
 display.setStatusBar( display.HiddenStatusBar )
 
@@ -36,6 +21,29 @@ if not system.hasEventSource( 'accelerometer' ) then
 	msg:setFillColor( 1,1,0 )
 end
 
+-- Start Menu
+composer.gotoScene( 'scene.menu', { effect = 'fade', time = 500 })
+
+--[[
+
+local physics = require( 'physics' )
+local mazeGenerator = require ( 'src.mazeGenerator' )
+
+
+physics.start()
+--physics.setScale( 60 ) -- a value that seems good for small objects (based on playtesting)
+physics.setGravity( 0, 0 ) -- overhead view, therefore no gravity vector
+
+
+mazeGenerator.init(10, 15, 2, 6)
+
+mazeGenerator.generate()
+
+mazeGenerator.printToScreen()
+
+
+
+
 
 -- Set up the accelerometer to provide measurements 60 times per second.
 -- Note that this matches the frame rate set in the "config.lua" file.
@@ -51,7 +59,7 @@ centerY = display.contentCenterY
 -- Create a bubble
 local bubble = display.newCircle(centerX+41, centerY+20, 15)
 bubble:setFillColor( 0.5, 0.5, 1 )
-physics.addBody( bubble, 'dynamic', { density=0.6, friction=0.5, bounce=0.2, radius=bubble.radius } )
+physics.addBody( bubble, 'dynamic', { density=1, friction=0.5, bounce=0.2, radius=bubble.radius } )
 
 local wall1 = display.newRect( centerX, display.contentHeight + 50, display.contentWidth, 10)	-- bottom
 physics.addBody( wall1, 'static', { desity=3.0, bounce=0.2 })
@@ -111,3 +119,4 @@ end
 
 -- Runtime listeners
 Runtime:addEventListener ('accelerometer', onAccelerate);
+]]
