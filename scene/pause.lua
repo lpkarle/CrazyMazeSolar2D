@@ -1,9 +1,8 @@
 local composer = require( 'composer' )
-local widget = require( 'widget' )
  
 local scene = composer.newScene()
 
-print( '[+] Menu: START' )
+print( '[+] PAUSE: START' )
 
 local centerX = display.contentCenterX
 local centerY = display.contentCenterY
@@ -13,25 +12,12 @@ local displayHeight = display.contentHeight
 local groupUI
  
 local background
-local btnStartGame
-local btnToggleSound
+local btnResumeGame
 
-local function onPressStartGame( event )
+ 
+local function onPressHidePauseOverlay( event )
 
-    composer.gotoScene( 'scene.game', { effect = 'crossFade', time = 500 } )
-    return true
-
-end
-
-local function onPressToggleVolume( event )
-
-    if event.target.enabled then
-        event.target:setFillColor( 0, 0, 0 )
-        event.target.enabled = false
-    else
-        event.target:setFillColor( 1, 0, 0 )
-        event.target.enabled = true
-    end
+    composer.hideOverlay( 'scene.pause', 400) 
 
     return true
 end
@@ -39,7 +25,7 @@ end
 -- create()
 function scene:create( event )
     
-    print( '[+] Menu: CREATE' )
+    print( '[+] PAUSE: CREATE' )
 
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
@@ -47,51 +33,31 @@ function scene:create( event )
     groupUI = display.newGroup()
     sceneGroup:insert(groupUI)
 
-    background = display.newRect( groupUI, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
-    background:setFillColor( 1, 1, 1 )
+    background = display.newRect( groupUI, centerX, centerY, displayWidth, displayHeight )
 
-    local title = display.newText({
-        parent = groupUI,
-        text = 'Crazy Maze',
-        x = centerX,
-        y = 200,
-        fontSize = 50,
-        align = 'center'
-    })
-    title:setFillColor(0, 0, 0)
-
-    btnStartGame = display.newRect( groupUI, centerX, centerY, 200, 50 )
-    btnStartGame:setFillColor(0,0,1)
-
-    btnToggleSound = display.newRect( groupUI, displayWidth - 75, displayHeight - 75, 50, 50 )
-    btnToggleSound.enabled = true
-    btnToggleSound:setFillColor( 1, 0, 0 )
-
-    btnStartGame:addEventListener( 'tap', onPressStartGame )
-    btnToggleSound:addEventListener( 'tap', onPressToggleVolume )
-
+    btnResumeGame = display.newRect(groupUI, centerX, centerY, 200, 50)
+    btnResumeGame:setFillColor(0,1,0)
+    btnResumeGame:addEventListener( 'tap', onPressHidePauseOverlay)
 end
  
  
 -- show()
 function scene:show( event )
-
+ 
     local sceneGroup = self.view
     local phase = event.phase
  
     if ( phase == "will" ) then
-
-        print( '[+] Menu: SHOW WILL' )
+        
+        print( '[+] PAUSE: SHOW WILL' )
 
         -- Code here runs when the scene is still off screen (but is about to come on screen)
  
     elseif ( phase == "did" ) then
-
-        print( '[+] Menu: SHOW DID' )
+        
+        print( '[+] PAUSE: SHOW DID' )
 
         -- Code here runs when the scene is entirely on screen
-
-
  
     end
 end
@@ -102,18 +68,19 @@ function scene:hide( event )
  
     local sceneGroup = self.view
     local phase = event.phase
+    local parent = event.parent
  
     if ( phase == "will" ) then
         
-        print( '[+] Menu: HIDE WILL' )
+        print( '[+] PAUSE: HIDE WILL' )
+
+        parent:resumeGame()
 
         -- Code here runs when the scene is on screen (but is about to go off screen)
  
     elseif ( phase == "did" ) then
         
-        print( '[+] Menu: HIDE DID' )
-
-        
+        print( '[+] PAUSE: HIDE DID' )
 
         -- Code here runs immediately after the scene goes entirely off screen
  
@@ -124,7 +91,7 @@ end
 -- destroy()
 function scene:destroy( event )
     
-    print( '[+] Menu: DESTROY' )
+    print( '[+] PAUSE: DESTROY' )
 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view

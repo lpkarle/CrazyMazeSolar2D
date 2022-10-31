@@ -9,13 +9,24 @@ local centerX = display.contentCenterX
 local centerY = display.contentCenterY
 
 local background
-local btnBackToMenu
+local touchOverlay
 
 
-local function onPressBackToMenu( event )
+local function onPressShowPauseOverlay( event )
+    
+    composer.showOverlay( 'scene.pause', {
+        effect = "fade",
+        time = 250,
+        isModal = true
+    } )
 
-       composer.gotoScene( 'scene.menu', { effect = 'fromRight', time = 500 } )
-       return true
+    return true
+end
+
+
+function scene:resumeGame()
+    print("Resume")
+    return true
 end
 
 -- create()
@@ -23,26 +34,19 @@ function scene:create( event )
 
     print( '[+] Game: CREATE' )
 
+    composer.removeScene( 'scene.menu' )
+
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
  
-    background =display.newRect( sceneGroup, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
+    background = display.newRect( sceneGroup, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
     background:setFillColor( 0, 0, 0 )
 
-    local text = display.newText( {
-        parent=sceneGroup,
-        text='Game',
-        x = centerX,
-        y = 200,
-        fontSize = 50,
-        align = 'center'
-    } )
+    touchOverlay = display.newRect( sceneGroup, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
+    touchOverlay.alpha = 0.0
+    touchOverlay.isHitTestable = true
+    touchOverlay:addEventListener( 'tap', onPressShowPauseOverlay )
 
-    btnBackToMenu = display.newRect( sceneGroup, centerX, centerY, 200, 50 )
-
-    btnBackToMenu:addEventListener( 'tap', onPressBackToMenu )
-
-    
 end
  
  
