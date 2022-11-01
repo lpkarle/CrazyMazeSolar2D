@@ -1,6 +1,6 @@
 local composer = require( 'composer' )
 local physics = require( 'physics' )
-local mazeGenerator = require ( 'src.mazeGenerator' )
+local mazeGenerator = require ( 'src.maze.mazeGenerator' )
 
 local scene = composer.newScene()
 
@@ -62,6 +62,9 @@ end
 
 local function onPressShowPauseOverlay( event )
     
+    -- Stop marble movement
+    physics.pause()
+
     composer.showOverlay( 'scene.pause', {
         effect = "fade",
         time = 250,
@@ -77,6 +80,8 @@ end
  
 function scene:resumeGame()
     print("Resume")
+    physics.start()
+
     return true
 end
 
