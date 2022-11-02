@@ -53,15 +53,19 @@ local levels = {
         cols = 13
     },
 }
-local currentLevel = 4
-local cellWidth = displayWidth / levels[currentLevel].cols - wallWidth 
+local currentLevel = 1
+local cellWidth = displayWidth / levels[currentLevel].cols - wallWidth*2 
 local xOffset = ( displayWidth  - cellWidth * levels[currentLevel].cols ) / 2
 local yOffset = ( displayHeight - cellWidth * levels[currentLevel].rows ) / 2
 
 
-local function drawWalls()
+local debugText = display.newText( {
+    text='Debug',
+    x=centerX,
+    y=centerY
+} )
 
-    -- Surrounding walls
+local function drawSurroundingWalls()
     -- North
     display.newRect( groupSurroundingWalls, centerX, 0 - wallWidth/2, displayWidth, wallWidth )   
     -- East
@@ -70,6 +74,13 @@ local function drawWalls()
     display.newRect( groupSurroundingWalls, centerX, displayHeight + wallWidth/2, displayWidth, wallWidth ) 
     -- West
     display.newRect( groupSurroundingWalls, 0 - wallWidth/2, centerY, wallWidth, displayHeight )
+
+    for i=1, groupSurroundingWalls.numChildren do
+        groupSurroundingWalls[i].name = "wall"
+    end
+end
+
+local function drawWalls()
 
     for i = 1, #maze.mazeArray do
 
@@ -113,8 +124,8 @@ end
 
 local function addPhysicsBodies()
 
-    local physicsWalls  = { density = 1, friction = 0.5, bounce = 0.2, radius = marble.radius }
-    local physicsMarble = { density = 1, friction = 0.5, bounce = 0.2 }
+    local physicsWalls  = { density = 1, friction = 1, bounce = 0.2 }
+    local physicsMarble = { density = 1, friction = 1, bounce = 0.2, radius = marble.path.radius }
 
     -- Surrounding walls
     for i = 1, groupSurroundingWalls.numChildren do
@@ -130,13 +141,56 @@ local function addPhysicsBodies()
 
 end
 
+
+local function marbleInStartArea()
+    
+    local hits = physics.queryRegion( 0, displayHeight - yOffset + 15, displayWidth, displayHeight )
+ 
+    if ( hits ) then
+        
+        -- Remove detected walls
+        for i,v in ipairs( hits ) do
+            if v.name == 'marble' then
+                debugText.text = 'START'
+                return true
+            end
+        end        
+    end
+
+    debugText.text = ''
+    return false
+end
+
+
+local function marbleInGoalArea()
+    
+    local hits = physics.queryRegion( 0, 0, displayWidth, yOffset - 15 )
+ 
+    if ( hits ) then
+        
+        -- Remove detected walls
+        for i,v in ipairs( hits ) do
+            if v.name == 'marble' then
+                debugText.text = 'END'
+                return true
+            end
+        end        
+    end
+
+    --debugText.text = ''
+    return false
+end
+
 local function onAccelerate( event )
 
-    local multiplyer = 0.1
+    local multiplyer = 0.3
     local newGravityX = event.xGravity *  multiplyer
     local newGravityY = event.yGravity * -multiplyer
 
     marble:applyLinearImpulse(newGravityX, newGravityY, marble.x, marble.y)
+
+    marbleInStartArea()
+    marbleInGoalArea()
 end
 
 local function onPressShowPauseOverlay( event )
@@ -199,13 +253,15 @@ function scene:create( event )
     goalArea =display.newRect( groupForeground, centerX, yOffset / 2 - wallWidth / 2, displayWidth, yOffset )
     goalArea:setFillColor(0,0,1)
 
-    marble = display.newCircle( groupForeground, centerX, displayHeight - yOffset / 2, 7)
+    marble = display.newCircle( groupForeground, centerX, displayHeight - yOffset / 2, 10)
     marble:setFillColor( 0.5, 0.5, 1 )
+    marble.name = 'marble'
 
     local level = levels[currentLevel]
     maze = Maze:new( level.rows, level.cols )
     maze:generate()
 
+    drawSurroundingWalls()
     drawWalls()
 
     system.setAccelerometerInterval( 60 )
@@ -232,11 +288,14 @@ function scene:show( event )
         -- Code here runs when the scene is entirely on screen
  
         physics.start()
-        physics.setScale( 60 ) -- a value that seems good for small objects (based on playtesting)
+        physics.setDrawMode( 'hybrid' )
+        --physics.setScale( 60 ) -- a value that seems good for small objects (based on playtesting)
         physics.setGravity( 0, 0 ) 
 
         addPhysicsBodies()
-        Runtime:addEventListener ('accelerometer', onAccelerate);
+        Runtime:addEventListener ('accelerometer', onAccelerate)
+
+        
 
     end
 end
