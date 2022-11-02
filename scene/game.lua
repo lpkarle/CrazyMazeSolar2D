@@ -82,6 +82,10 @@ end
 
 local function drawWalls()
 
+    cellWidth = displayWidth / levels[currentLevel].cols - wallWidth*2 
+    xOffset = ( displayWidth  - cellWidth * levels[currentLevel].cols ) / 2
+    yOffset = ( displayHeight - cellWidth * levels[currentLevel].rows ) / 2
+
     for i = 1, #maze.mazeArray do
 
         local cell = maze.mazeArray[ i ]
@@ -181,6 +185,48 @@ local function marbleInGoalArea()
     return false
 end
 
+local function nextLevel()
+
+     --hit area
+    startArea.y = displayHeight - yOffset/2
+    startArea.height = yOffset
+    goalArea.y = yOffset / 2
+    goalArea.height = yOffset
+
+    -- new maze
+    print("maze size: "..#maze.mazeArray)
+    print("maze group size: "..groupMazeWalls.numChildren)
+
+    while groupMazeWalls.numChildren > 0 do
+        local wall = groupMazeWalls[1]
+        if wall then
+            wall:removeSelf()
+        end
+    end
+
+    print("maze group size: "..groupMazeWalls.numChildren)
+
+    if currentLevel == #levels then
+        currentLevel = 1
+    else
+        currentLevel = currentLevel + 1
+    end
+
+    local level = levels[currentLevel]
+    maze = Maze:new( level.rows, level.cols )
+    maze:generate()
+
+    drawWalls()
+    addPhysicsBodies()
+
+   
+
+    -- reset marble
+    marble.x = centerX
+    marble.y = displayHeight - yOffset / 2
+
+end
+
 local function onAccelerate( event )
 
     local multiplyer = 0.3
@@ -190,11 +236,17 @@ local function onAccelerate( event )
     marble:applyLinearImpulse(newGravityX, newGravityY, marble.x, marble.y)
 
     marbleInStartArea()
-    marbleInGoalArea()
+
+    if marbleInGoalArea() then
+        nextLevel()
+    end
 end
 
 local function onPressShowPauseOverlay( event )
-    
+
+    nextLevel()
+
+    --[[
     -- Stop marble movement
     physics.pause()
 
@@ -203,7 +255,7 @@ local function onPressShowPauseOverlay( event )
         time = 250,
         isModal = true
     } )
-
+    ]]
     return true
 end
 
