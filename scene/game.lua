@@ -1,6 +1,6 @@
 local composer = require( 'composer' )
 local physics = require( 'physics' )
-local mazeGenerator = require ( 'src.maze.mazeGenerator' )
+require ( 'src.maze.Maze' )
 
 local scene = composer.newScene()
 
@@ -14,27 +14,100 @@ local displayHeight = display.contentHeight
 
 local groupBackground
 local groupForeground
-local groupWalls
+local groupSurroundingWalls
+local groupMazeWalls
 local groupUI
 
 local background
 local touchOverlay
 
 local marble
-local wallWidth = 10
+local startArea
+local goalArea
+local wallWidth = 2
+local maze
+
+local levels = {
+    {
+        rows = 5, 
+        cols = 3
+    },
+    {
+        rows = 9, 
+        cols = 5
+    },
+    {
+        rows = 13, 
+        cols = 7
+    },
+    {
+        rows = 17, 
+        cols = 9
+    },
+    {
+        rows = 22, 
+        cols = 11
+    },
+    {
+        rows = 26, 
+        cols = 13
+    },
+}
+local currentLevel = 4
+local cellWidth = displayWidth / levels[currentLevel].cols - wallWidth 
+local xOffset = ( displayWidth  - cellWidth * levels[currentLevel].cols ) / 2
+local yOffset = ( displayHeight - cellWidth * levels[currentLevel].rows ) / 2
 
 
+local function drawWalls()
 
-local function addSurroundingWalls()
-
+    -- Surrounding walls
     -- North
-    local wallNorth = display.newRect( groupWalls, centerX, 0 - wallWidth/2, displayWidth, wallWidth )   
+    display.newRect( groupSurroundingWalls, centerX, 0 - wallWidth/2, displayWidth, wallWidth )   
     -- East
-    local wallEast  = display.newRect( groupWalls, displayWidth + wallWidth/2, centerY, wallWidth, displayHeight) 
+    display.newRect( groupSurroundingWalls, displayWidth + wallWidth/2, centerY, wallWidth, displayHeight) 
     -- South
-    local wallSouth = display.newRect( groupWalls, centerX, displayHeight + wallWidth/2, displayWidth, wallWidth ) 
+    display.newRect( groupSurroundingWalls, centerX, displayHeight + wallWidth/2, displayWidth, wallWidth ) 
     -- West
-    local wallWest  = display.newRect( groupWalls, 0 - wallWidth/2, centerY, wallWidth, displayHeight )
+    display.newRect( groupSurroundingWalls, 0 - wallWidth/2, centerY, wallWidth, displayHeight )
+
+    for i = 1, #maze.mazeArray do
+
+        local cell = maze.mazeArray[ i ]
+
+        print("Draw (" .. cell.x .. "," .. cell.y .. ")")
+
+        local x = cell.x * cellWidth - cellWidth + xOffset
+        local y = cell.y * cellWidth - cellWidth + yOffset
+
+        print(x .. "," .. y)
+
+        if cell.wallNorth then
+            print("NORTH")
+            local wallNorth = display.newLine(groupMazeWalls, x, y, x + cellWidth, y)
+            wallNorth.strokeWidth = wallWidth
+        end
+
+        if cell.wallEast then
+            print("EAST")
+            local wallEast = display.newLine(groupMazeWalls, x + cellWidth, y, x + cellWidth, y + cellWidth)
+            wallEast.strokeWidth = wallWidth
+        end
+
+        if cell.wallSouth then
+            print("SOUTH")
+            local wallSouth = display.newLine(groupMazeWalls, x + cellWidth, y + cellWidth, x, y + cellWidth)
+            wallSouth.strokeWidth = wallWidth
+        end
+
+        if cell.wallWest then
+            print("WEST")
+            local wallWest = display.newLine(groupMazeWalls, x, y + cellWidth, x, y)
+            wallWest.strokeWidth = wallWidth
+        end
+    end
+
+    
 
 end
 
@@ -43,8 +116,14 @@ local function addPhysicsBodies()
     local physicsWalls  = { density = 1, friction = 0.5, bounce = 0.2, radius = marble.radius }
     local physicsMarble = { density = 1, friction = 0.5, bounce = 0.2 }
 
-    for i = 1, groupWalls.numChildren do
-        physics.addBody( groupWalls[i], 'static', physicsWalls )
+    -- Surrounding walls
+    for i = 1, groupSurroundingWalls.numChildren do
+        physics.addBody( groupSurroundingWalls[i], 'static', physicsWalls )
+    end
+
+    -- Maze walls
+    for i = 1, groupMazeWalls.numChildren do
+        physics.addBody( groupMazeWalls[i], 'static', physicsWalls )
     end
 
     physics.addBody( marble, 'dynamic', physicsMarble )
@@ -97,12 +176,14 @@ function scene:create( event )
 
     groupBackground = display.newGroup()
     groupForeground = display.newGroup()
-    groupWalls = display.newGroup()
+    groupSurroundingWalls = display.newGroup()
+    groupMazeWalls = display.newGroup()
     groupUI = display.newGroup()
 
     sceneGroup:insert(groupBackground)
     sceneGroup:insert(groupForeground)
-    --groupForeground:insert(groupWalls)
+    groupForeground:insert(groupSurroundingWalls)
+    groupForeground:insert(groupMazeWalls)
     sceneGroup:insert(groupUI)
 
     background = display.newRect( groupBackground, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
@@ -111,11 +192,21 @@ function scene:create( event )
     touchOverlay.alpha = 0.0
     touchOverlay.isHitTestable = true
     touchOverlay:addEventListener( 'tap', onPressShowPauseOverlay )
+    
+    startArea =display.newRect( groupForeground, centerX, displayHeight - yOffset / 2 + wallWidth / 2, displayWidth, yOffset )
+    startArea:setFillColor(1,0,0)
 
-    marble = display.newCircle( groupForeground, centerX+41, centerY+20, 15)
+    goalArea =display.newRect( groupForeground, centerX, yOffset / 2 - wallWidth / 2, displayWidth, yOffset )
+    goalArea:setFillColor(0,0,1)
+
+    marble = display.newCircle( groupForeground, centerX, displayHeight - yOffset / 2, 7)
     marble:setFillColor( 0.5, 0.5, 1 )
-   
-    addSurroundingWalls()
+
+    local level = levels[currentLevel]
+    maze = Maze:new( level.rows, level.cols )
+    maze:generate()
+
+    drawWalls()
 
     system.setAccelerometerInterval( 60 )
 
@@ -145,8 +236,7 @@ function scene:show( event )
         physics.setGravity( 0, 0 ) 
 
         addPhysicsBodies()
-
-       Runtime:addEventListener ('accelerometer', onAccelerate);
+        Runtime:addEventListener ('accelerometer', onAccelerate);
 
     end
 end
