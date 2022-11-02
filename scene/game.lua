@@ -1,11 +1,14 @@
 local composer = require( 'composer' )
 local physics = require( 'physics' )
+local marble = require( 'scene.game.marble' )
 require ( 'src.maze.Maze' )
 
 local scene = composer.newScene()
 
 print( '[+] Game: START' )
 
+display.setDefault( "anchorX", 0 )
+display.setDefault( "anchorY", 0 )
 
 local centerX = display.contentCenterX
 local centerY = display.contentCenterY
@@ -21,7 +24,6 @@ local groupUI
 local background
 local touchOverlay
 
-local marble
 local startArea
 local goalArea
 local wallWidth = 2
@@ -67,16 +69,16 @@ local debugText = display.newText( {
 
 local function drawSurroundingWalls()
     -- North
-    display.newRect( groupSurroundingWalls, centerX, 0 - wallWidth/2, displayWidth, wallWidth )   
+    display.newRect( groupSurroundingWalls, 0, 0, displayWidth, wallWidth )   
     -- East
-    display.newRect( groupSurroundingWalls, displayWidth + wallWidth/2, centerY, wallWidth, displayHeight) 
+    display.newRect( groupSurroundingWalls, displayWidth , centerY, wallWidth, displayHeight) 
     -- South
-    display.newRect( groupSurroundingWalls, centerX, displayHeight + wallWidth/2, displayWidth, wallWidth ) 
+    display.newRect( groupSurroundingWalls, 0, displayHeight + wallWidth/2, displayWidth, wallWidth ) 
     -- West
-    display.newRect( groupSurroundingWalls, 0 - wallWidth/2, centerY, wallWidth, displayHeight )
+    display.newRect( groupSurroundingWalls, 0 , 0, wallWidth, displayHeight )
 
-    for i=1, groupSurroundingWalls.numChildren do
-        groupSurroundingWalls[i].name = "wall"
+    for i = 1, groupSurroundingWalls.numChildren do
+        groupSurroundingWalls[i].name = 'wall'
     end
 end
 
@@ -129,7 +131,6 @@ end
 local function addPhysicsBodies()
 
     local physicsWalls  = { density = 1, friction = 1, bounce = 0.2 }
-    local physicsMarble = { density = 1, friction = 1, bounce = 0.2, radius = marble.path.radius }
 
     -- Surrounding walls
     for i = 1, groupSurroundingWalls.numChildren do
@@ -140,8 +141,6 @@ local function addPhysicsBodies()
     for i = 1, groupMazeWalls.numChildren do
         physics.addBody( groupMazeWalls[i], 'static', physicsWalls )
     end
-
-    physics.addBody( marble, 'dynamic', physicsMarble )
 
 end
 
@@ -185,12 +184,13 @@ local function marbleInGoalArea()
     return false
 end
 
+
 local function nextLevel()
 
      --hit area
-    startArea.y = displayHeight - yOffset/2
+    startArea.y = displayHeight - yOffset
     startArea.height = yOffset
-    goalArea.y = yOffset / 2
+    goalArea.y = 0
     goalArea.height = yOffset
 
     -- new maze
@@ -219,27 +219,9 @@ local function nextLevel()
     drawWalls()
     addPhysicsBodies()
 
-   
-
     -- reset marble
-    marble.x = centerX
-    marble.y = displayHeight - yOffset / 2
+    marble.resetPosition(centerX, displayHeight - yOffset / 2)
 
-end
-
-local function onAccelerate( event )
-
-    local multiplyer = 0.3
-    local newGravityX = event.xGravity *  multiplyer
-    local newGravityY = event.yGravity * -multiplyer
-
-    marble:applyLinearImpulse(newGravityX, newGravityY, marble.x, marble.y)
-
-    marbleInStartArea()
-
-    if marbleInGoalArea() then
-        nextLevel()
-    end
 end
 
 local function onPressShowPauseOverlay( event )
@@ -257,6 +239,15 @@ local function onPressShowPauseOverlay( event )
     } )
     ]]
     return true
+end
+
+-- Game Loop
+local function enterFrame( event )
+    marbleInStartArea()
+
+    if marbleInGoalArea() then
+        nextLevel()
+    end
 end
 
 -- -----------------------------------------------------------------------------------
@@ -278,6 +269,10 @@ function scene:create( event )
     composer.removeScene( 'scene.menu' )
 
     local sceneGroup = self.view
+
+    physics.start()
+    physics.setDrawMode( 'hybrid' )
+    physics.setGravity( 0, 0 ) 
     
 
     groupBackground = display.newGroup()
@@ -292,22 +287,21 @@ function scene:create( event )
     groupForeground:insert(groupMazeWalls)
     sceneGroup:insert(groupUI)
 
-    background = display.newRect( groupBackground, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
+    background = display.newRect( groupBackground, 0, 0, display.contentWidth, display.contentHeight )
     background:setFillColor( 0, 0, 0 )
-    touchOverlay = display.newRect( groupUI, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
+    touchOverlay = display.newRect( groupUI, 0, 0, display.contentWidth, display.contentHeight )
     touchOverlay.alpha = 0.0
     touchOverlay.isHitTestable = true
     touchOverlay:addEventListener( 'tap', onPressShowPauseOverlay )
     
-    startArea =display.newRect( groupForeground, centerX, displayHeight - yOffset / 2 + wallWidth / 2, displayWidth, yOffset )
+    startArea = display.newRect( groupForeground, 0, displayHeight - yOffset, displayWidth, yOffset )
     startArea:setFillColor(1,0,0)
 
-    goalArea =display.newRect( groupForeground, centerX, yOffset / 2 - wallWidth / 2, displayWidth, yOffset )
+    goalArea = display.newRect( groupForeground, 0, 0, displayWidth, yOffset )
     goalArea:setFillColor(0,0,1)
 
-    marble = display.newCircle( groupForeground, centerX, displayHeight - yOffset / 2, 10)
-    marble:setFillColor( 0.5, 0.5, 1 )
-    marble.name = 'marble'
+    marble = marble.new(groupForeground, centerX, displayHeight - yOffset / 2)
+
 
     local level = levels[currentLevel]
     maze = Maze:new( level.rows, level.cols )
@@ -316,10 +310,7 @@ function scene:create( event )
     drawSurroundingWalls()
     drawWalls()
 
-    system.setAccelerometerInterval( 60 )
-
 end
- 
  
 -- show()
 function scene:show( event )
@@ -331,7 +322,9 @@ function scene:show( event )
 
         print( '[+] Game: SHOW WILL' )
 
-        -- Code here runs when the scene is still off screen (but is about to come on screen)
+        Runtime:addEventListener("enterFrame", enterFrame)
+
+        addPhysicsBodies()
  
     elseif ( phase == "did" ) then
 
@@ -339,16 +332,6 @@ function scene:show( event )
 
         -- Code here runs when the scene is entirely on screen
  
-        physics.start()
-        physics.setDrawMode( 'hybrid' )
-        --physics.setScale( 60 ) -- a value that seems good for small objects (based on playtesting)
-        physics.setGravity( 0, 0 ) 
-
-        addPhysicsBodies()
-        Runtime:addEventListener ('accelerometer', onAccelerate)
-
-        
-
     end
 end
  
