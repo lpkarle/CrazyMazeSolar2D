@@ -7,8 +7,8 @@ local scene = composer.newScene()
 
 print( '[+] Game: START' )
 
-display.setDefault( "anchorX", 0 )
-display.setDefault( "anchorY", 0 )
+display.setDefault( 'anchorX', 0 )
+display.setDefault( 'anchorY', 0 )
 
 local centerX = display.contentCenterX
 local centerY = display.contentCenterY
@@ -26,67 +26,63 @@ local touchOverlay
 
 local startArea
 local goalArea
-local wallWidth = 2
+local wallWidth = 5
 local maze
 
-local levels = {
-    {
-        rows = 5, 
-        cols = 3
-    },
-    {
-        rows = 9, 
-        cols = 5
-    },
-    {
-        rows = 13, 
-        cols = 7
-    },
-    {
-        rows = 17, 
-        cols = 9
-    },
-    {
-        rows = 22, 
-        cols = 11
-    },
-    {
-        rows = 26, 
-        cols = 13
-    },
-}
-local currentLevel = 1
-local cellWidth = displayWidth / levels[currentLevel].cols - wallWidth*2 
-local xOffset = ( displayWidth  - cellWidth * levels[currentLevel].cols ) / 2
-local yOffset = ( displayHeight - cellWidth * levels[currentLevel].rows ) / 2
-
+local startColumnAmount = 3
+local levelUpStep = 2
+local currentCols = startColumnAmount
 
 local debugText = display.newText( {
     text='Debug',
     x=centerX,
     y=centerY
 } )
+debugText.isVisible = false
 
 local function drawSurroundingWalls()
-    -- North
-    display.newRect( groupSurroundingWalls, 0, 0, displayWidth, wallWidth )   
-    -- East
-    display.newRect( groupSurroundingWalls, displayWidth , centerY, wallWidth, displayHeight) 
-    -- South
-    display.newRect( groupSurroundingWalls, 0, displayHeight + wallWidth/2, displayWidth, wallWidth ) 
-    -- West
-    display.newRect( groupSurroundingWalls, 0 , 0, wallWidth, displayHeight )
+
+    local wallOffset = wallWidth / 2
+
+    local lineNorth = display.newLine( groupSurroundingWalls, 0, -wallOffset, displayWidth, -wallOffset )   
+    lineNorth.strokeWidth = wallWidth
+
+    local lineEast = display.newLine( groupSurroundingWalls, displayWidth + wallOffset, 0, displayWidth + wallOffset, displayHeight) 
+    lineEast.strokeWidth = wallWidth
+    
+    local lineSouth = display.newLine( groupSurroundingWalls, 0, displayHeight + wallOffset, displayWidth, displayHeight + wallOffset) 
+    lineSouth.strokeWidth = wallWidth
+    
+    local lineWest = display.newLine( groupSurroundingWalls, -wallOffset , 0, -wallOffset, displayHeight) 
+    lineWest.strokeWidth = wallWidth
 
     for i = 1, groupSurroundingWalls.numChildren do
         groupSurroundingWalls[i].name = 'wall'
     end
 end
 
+local function calcCellWidth()
+    return ( displayWidth - wallWidth ) / currentCols
+end
+
+local function calcRowAmount()
+    return math.floor( displayHeight / calcCellWidth() ) - 1
+end
+
+local function calcOffsetX()
+    return ( displayWidth  - calcCellWidth() * currentCols ) / 2
+end
+
+local function calcOffsetY()
+    return ( displayHeight - calcCellWidth() * calcRowAmount() ) / 2
+end
+
+
 local function drawWalls()
 
-    cellWidth = displayWidth / levels[currentLevel].cols - wallWidth*2 
-    xOffset = ( displayWidth  - cellWidth * levels[currentLevel].cols ) / 2
-    yOffset = ( displayHeight - cellWidth * levels[currentLevel].rows ) / 2
+    local cellWidth = calcCellWidth()
+    local xOffset  = calcOffsetX()
+    local yOffset  = calcOffsetY()
 
     for i = 1, #maze.mazeArray do
 
@@ -123,9 +119,7 @@ local function drawWalls()
             wallWest.strokeWidth = wallWidth
         end
     end
-
     
-
 end
 
 local function addPhysicsBodies()
@@ -147,7 +141,7 @@ end
 
 local function marbleInStartArea()
     
-    local hits = physics.queryRegion( 0, displayHeight - yOffset + 15, displayWidth, displayHeight )
+    local hits = physics.queryRegion( 0, displayHeight - calcOffsetY() + 15, displayWidth, displayHeight )
  
     if ( hits ) then
         
@@ -167,7 +161,7 @@ end
 
 local function marbleInGoalArea()
     
-    local hits = physics.queryRegion( 0, 0, displayWidth, yOffset - 15 )
+    local hits = physics.queryRegion( 0, 0, displayWidth, calcOffsetY() - 15 )
  
     if ( hits ) then
         
@@ -187,11 +181,13 @@ end
 
 local function nextLevel()
 
-     --hit area
-    startArea.y = displayHeight - yOffset
-    startArea.height = yOffset
+    local offsetY = calcOffsetY()
+
+    --hit area
+    startArea.y = displayHeight - offsetY
+    startArea.height = offsetY
     goalArea.y = 0
-    goalArea.height = yOffset
+    goalArea.height = offsetY
 
     -- new maze
     print("maze size: "..#maze.mazeArray)
@@ -204,23 +200,20 @@ local function nextLevel()
         end
     end
 
-    print("maze group size: "..groupMazeWalls.numChildren)
-
-    if currentLevel == #levels then
-        currentLevel = 1
+    if currentCols == 15 then
+        currentCols = 3
     else
-        currentLevel = currentLevel + 1
+        currentCols = currentCols + levelUpStep
     end
 
-    local level = levels[currentLevel]
-    maze = Maze:new( level.rows, level.cols )
+    maze = Maze:new( calcRowAmount(), currentCols )
     maze:generate()
 
     drawWalls()
     addPhysicsBodies()
 
     -- reset marble
-    marble.resetPosition(centerX, displayHeight - yOffset / 2)
+    marble.resetPosition(centerX, displayHeight - offsetY / 2)
 
 end
 
@@ -271,7 +264,7 @@ function scene:create( event )
     local sceneGroup = self.view
 
     physics.start()
-    physics.setDrawMode( 'hybrid' )
+    physics.setDrawMode( 'normal' )
     physics.setGravity( 0, 0 ) 
     
 
@@ -293,18 +286,25 @@ function scene:create( event )
     touchOverlay.alpha = 0.0
     touchOverlay.isHitTestable = true
     touchOverlay:addEventListener( 'tap', onPressShowPauseOverlay )
+
+
+    local cellWidth = calcCellWidth()
+    local xOffset = calcOffsetX()
+    local yOffset = calcOffsetY()
+
     
     startArea = display.newRect( groupForeground, 0, displayHeight - yOffset, displayWidth, yOffset )
     startArea:setFillColor(1,0,0)
+    startArea.isVisible = false
 
     goalArea = display.newRect( groupForeground, 0, 0, displayWidth, yOffset )
     goalArea:setFillColor(0,0,1)
+    goalArea.isVisible = false
 
     marble = marble.new(groupForeground, centerX, displayHeight - yOffset / 2)
 
 
-    local level = levels[currentLevel]
-    maze = Maze:new( level.rows, level.cols )
+    maze = Maze:new( calcRowAmount(), startColumnAmount )
     maze:generate()
 
     drawSurroundingWalls()
