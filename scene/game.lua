@@ -26,7 +26,7 @@ local touchOverlay
 
 local startArea
 local goalArea
-local wallWidth = 5
+local wallWidth = 4
 local maze
 
 local startColumnAmount = 3
@@ -93,29 +93,31 @@ local function drawWalls()
         local x = cell.x * cellWidth - cellWidth + xOffset
         local y = cell.y * cellWidth - cellWidth + yOffset
 
+        local lineOffset = wallWidth / 2
+
         print(x .. "," .. y)
 
         if cell.wallNorth then
             print("NORTH")
-            local wallNorth = display.newLine(groupMazeWalls, x, y, x + cellWidth, y)
+            local wallNorth = display.newLine(groupMazeWalls, x - lineOffset, y, x + cellWidth + lineOffset, y)
             wallNorth.strokeWidth = wallWidth
         end
 
         if cell.wallEast then
             print("EAST")
-            local wallEast = display.newLine(groupMazeWalls, x + cellWidth, y, x + cellWidth, y + cellWidth)
+            local wallEast = display.newLine(groupMazeWalls, x + cellWidth, y - lineOffset, x + cellWidth, y + cellWidth + lineOffset)
             wallEast.strokeWidth = wallWidth
         end
 
         if cell.wallSouth then
             print("SOUTH")
-            local wallSouth = display.newLine(groupMazeWalls, x + cellWidth, y + cellWidth, x, y + cellWidth)
+            local wallSouth = display.newLine(groupMazeWalls, x + cellWidth + lineOffset, y + cellWidth, x - lineOffset, y + cellWidth)
             wallSouth.strokeWidth = wallWidth
         end
 
         if cell.wallWest then
             print("WEST")
-            local wallWest = display.newLine(groupMazeWalls, x, y + cellWidth, x, y)
+            local wallWest = display.newLine(groupMazeWalls, x, y + cellWidth + lineOffset, x, y - lineOffset)
             wallWest.strokeWidth = wallWidth
         end
     end
@@ -174,20 +176,11 @@ local function marbleInGoalArea()
         end        
     end
 
-    --debugText.text = ''
     return false
 end
 
 
 local function nextLevel()
-
-    local offsetY = calcOffsetY()
-
-    --hit area
-    startArea.y = displayHeight - offsetY
-    startArea.height = offsetY
-    goalArea.y = 0
-    goalArea.height = offsetY
 
     -- new maze
     print("maze size: "..#maze.mazeArray)
@@ -212,9 +205,45 @@ local function nextLevel()
     drawWalls()
     addPhysicsBodies()
 
+    local offsetY = calcOffsetY()
+
+    --hit area
+    startArea.y = displayHeight - offsetY + wallWidth / 2
+    startArea.height = offsetY
+    goalArea.y = 0
+    goalArea.height = offsetY - wallWidth / 2
+
     -- reset marble
     marble.resetPosition(centerX, displayHeight - offsetY / 2)
 
+end
+
+
+local function setupGame()
+
+    physics.start()
+    physics.setDrawMode( 'normal' )
+    physics.setGravity( 0, 0 ) 
+
+    maze = Maze:new( calcRowAmount(), startColumnAmount )
+    maze:generate()
+
+    local cellWidth = calcCellWidth()
+    local xOffset = calcOffsetX()
+    local yOffset = calcOffsetY()
+    
+    startArea = display.newRect( groupForeground, 0, displayHeight - yOffset + wallWidth / 2, displayWidth, yOffset - wallWidth / 2)
+    startArea:setFillColor(1,0,0)
+    startArea.isVisible = true
+
+    goalArea = display.newRect( groupForeground, 0, 0, displayWidth, yOffset - wallWidth / 2 )
+    goalArea:setFillColor(0,0,1)
+    goalArea.isVisible = true
+
+    marble = marble.new(groupForeground, centerX, displayHeight - yOffset / 2)
+
+    drawSurroundingWalls()
+    drawWalls()
 end
 
 local function onPressShowPauseOverlay( event )
@@ -259,25 +288,20 @@ function scene:create( event )
 
     print( '[+] Game: CREATE' )
 
-    composer.removeScene( 'scene.menu' )
-
     local sceneGroup = self.view
 
-    physics.start()
-    physics.setDrawMode( 'normal' )
-    physics.setGravity( 0, 0 ) 
-    
+    composer.removeScene( 'scene.menu' )
 
     groupBackground = display.newGroup()
-    groupForeground = display.newGroup()
     groupSurroundingWalls = display.newGroup()
     groupMazeWalls = display.newGroup()
+    groupForeground = display.newGroup()
     groupUI = display.newGroup()
 
     sceneGroup:insert(groupBackground)
-    sceneGroup:insert(groupForeground)
     groupForeground:insert(groupSurroundingWalls)
     groupForeground:insert(groupMazeWalls)
+    sceneGroup:insert(groupForeground)
     sceneGroup:insert(groupUI)
 
     background = display.newRect( groupBackground, 0, 0, display.contentWidth, display.contentHeight )
@@ -287,29 +311,7 @@ function scene:create( event )
     touchOverlay.isHitTestable = true
     touchOverlay:addEventListener( 'tap', onPressShowPauseOverlay )
 
-
-    local cellWidth = calcCellWidth()
-    local xOffset = calcOffsetX()
-    local yOffset = calcOffsetY()
-
-    
-    startArea = display.newRect( groupForeground, 0, displayHeight - yOffset, displayWidth, yOffset )
-    startArea:setFillColor(1,0,0)
-    startArea.isVisible = false
-
-    goalArea = display.newRect( groupForeground, 0, 0, displayWidth, yOffset )
-    goalArea:setFillColor(0,0,1)
-    goalArea.isVisible = false
-
-    marble = marble.new(groupForeground, centerX, displayHeight - yOffset / 2)
-
-
-    maze = Maze:new( calcRowAmount(), startColumnAmount )
-    maze:generate()
-
-    drawSurroundingWalls()
-    drawWalls()
-
+    setupGame()
 end
  
 -- show()
