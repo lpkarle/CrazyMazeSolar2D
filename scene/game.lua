@@ -34,31 +34,23 @@ local startColumnAmount = 3
 local levelUpStep = 2
 local currentCols = startColumnAmount
 
-local debugText = display.newText( {
-    text='Debug',
-    x=centerX,
-    y=centerY
-} )
-debugText.isVisible = false
-
 local function drawSurroundingWalls()
 
-    local wallOffset = wallWidth / 2
+    -- North
+    display.newLine( groupSurroundingWalls, 0, 0, displayWidth, 0 )  
 
-    local lineNorth = display.newLine( groupSurroundingWalls, 0, -wallOffset, displayWidth, -wallOffset )   
-    lineNorth.strokeWidth = wallWidth
+    -- East
+    display.newLine( groupSurroundingWalls, displayWidth, 0, displayWidth, displayHeight) 
 
-    local lineEast = display.newLine( groupSurroundingWalls, displayWidth + wallOffset, 0, displayWidth + wallOffset, displayHeight) 
-    lineEast.strokeWidth = wallWidth
-    
-    local lineSouth = display.newLine( groupSurroundingWalls, 0, displayHeight + wallOffset, displayWidth, displayHeight + wallOffset) 
-    lineSouth.strokeWidth = wallWidth
-    
-    local lineWest = display.newLine( groupSurroundingWalls, -wallOffset , 0, -wallOffset, displayHeight) 
-    lineWest.strokeWidth = wallWidth
+    -- South
+    display.newLine( groupSurroundingWalls, 0, displayHeight, displayWidth, displayHeight) 
+
+    -- West
+    display.newLine( groupSurroundingWalls,0, 0, 0, displayHeight) 
 
     for i = 1, groupSurroundingWalls.numChildren do
         groupSurroundingWalls[i].name = 'wall'
+        groupSurroundingWalls[i].isVisible = false
     end
 end
 
@@ -151,13 +143,11 @@ local function marbleInStartArea()
         -- Remove detected walls
         for i,v in ipairs( hits ) do
             if v.name == 'marble' then
-                debugText.text = 'START'
                 return true
             end
         end        
     end
 
-    debugText.text = ''
     return false
 end
 
@@ -171,7 +161,6 @@ local function marbleInGoalArea()
         -- Remove detected walls
         for i,v in ipairs( hits ) do
             if v.name == 'marble' then
-                debugText.text = 'END'
                 return true
             end
         end        
