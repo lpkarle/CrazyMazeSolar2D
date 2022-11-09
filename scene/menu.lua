@@ -1,5 +1,6 @@
 local composer = require( 'composer' )
 local widget = require( 'widget' )
+local global = require( 'src.globalData')
  
 local scene = composer.newScene()
 
@@ -14,7 +15,8 @@ local groupUI
  
 local background
 local btnStartGame
-local btnToggleSound
+local btnSoundOn
+local btnSoundOff
 
 local function onPressStartGame( event )
 
@@ -23,14 +25,21 @@ local function onPressStartGame( event )
 
 end
 
-local function onPressToggleVolume( event )
+local function onPressSoundOn( event )
 
-    if event.target.enabled then
-        event.target:setFillColor( 0, 0, 0 )
-        event.target.enabled = false
-    else
-        event.target:setFillColor( 1, 0, 0 )
-        event.target.enabled = true
+    if event.target.isVisible then
+        event.target.isVisible = false
+        btnSoundOff.isVisible = true
+    end
+
+    return true
+end
+
+local function onPressSoundOff( event )
+
+    if event.target.isVisible then
+        event.target.isVisible = false
+        btnSoundOn.isVisible = true
     end
 
     return true
@@ -48,27 +57,30 @@ function scene:create( event )
     sceneGroup:insert(groupUI)
 
     background = display.newRect( groupUI, display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight )
-    background:setFillColor( 1, 1, 1 )
+    background:setFillColor( unpack(global.colorBackground) )
 
-    local title = display.newText({
-        parent = groupUI,
-        text = 'Crazy Maze',
-        x = centerX,
-        y = 200,
-        fontSize = 50,
-        align = 'center'
-    })
-    title:setFillColor(0, 0, 0)
+    local title = display.newImage( groupUI, 'src/assets/images/game-title.png', display.contentCenterX, displayHeight * 0.33)
+    title:scale(0.3, 0.3)
 
-    btnStartGame = display.newRect( groupUI, centerX, centerY, 200, 50 )
-    btnStartGame:setFillColor(0,0,1)
+    btnStartGame = display.newImage( groupUI, 'src/assets/icons/play.png', display.contentCenterX, displayHeight * 0.66)
+    btnStartGame:scale(0.5, 0.5)
 
-    btnToggleSound = display.newRect( groupUI, displayWidth - 75, displayHeight - 75, 50, 50 )
-    btnToggleSound.enabled = true
-    btnToggleSound:setFillColor( 1, 0, 0 )
+    btnSoundOn = display.newImage( groupUI, 'src/assets/icons/sound-on.png', displayWidth-75, displayHeight-75 )
+    btnSoundOn:scale(0.5, 0.5)
+    btnSoundOn.anchorX = 0
+    btnSoundOn.anchorY = 0
+    btnSoundOn.enabled = true
+
+    btnSoundOff = display.newImage( groupUI, 'src/assets/icons/sound-off.png', displayWidth-75, displayHeight-75 )
+    btnSoundOff:scale(0.5, 0.5)
+    btnSoundOff.anchorX = 0
+    btnSoundOff.anchorY = 0
+    btnSoundOff.enabled = true
+    btnSoundOff.isVisible = false
 
     btnStartGame:addEventListener( 'tap', onPressStartGame )
-    btnToggleSound:addEventListener( 'tap', onPressToggleVolume )
+    btnSoundOn:addEventListener( 'tap', onPressSoundOn )
+    btnSoundOff:addEventListener( 'tap', onPressSoundOff )
 
 end
  

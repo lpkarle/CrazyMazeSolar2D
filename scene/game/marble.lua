@@ -1,3 +1,4 @@
+local global = require( 'src.globalData' )
 local M = {}
 
 function M.new( parent, x, y )
@@ -8,7 +9,7 @@ function M.new( parent, x, y )
     local marble = display.newCircle(parent, x, y, marbleRadius)
     marble.anchorX = 0.5
     marble.anchorY = 0.5
-    marble:setFillColor( 0.5, 0.5, 1 )
+    marble:setFillColor( unpack(global.colorMarble) )
     marble.name = 'marble'
 
     marble.resetPosition = function(x, y)
@@ -24,7 +25,7 @@ function M.new( parent, x, y )
 
     local function onAccelerate( event )
 
-        local multiplyer = 0.3
+        local multiplyer = 0.1
         local newGravityX = event.xGravity *  multiplyer
         local newGravityY = event.yGravity * -multiplyer
 

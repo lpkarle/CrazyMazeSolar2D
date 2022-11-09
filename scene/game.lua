@@ -1,5 +1,6 @@
 local composer = require( 'composer' )
 local physics = require( 'physics' )
+local global = require( 'src.globalData' )
 local marble = require( 'scene.game.marble' )
 require ( 'src.maze.Maze' )
 
@@ -233,11 +234,11 @@ local function setupGame()
     local yOffset = calcOffsetY()
     
     startArea = display.newRect( groupForeground, 0, displayHeight - yOffset + wallWidth / 2, displayWidth, yOffset - wallWidth / 2)
-    startArea:setFillColor(1,0,0)
+    startArea:setFillColor( unpack(global.colorStartArea) )
     startArea.isVisible = true
 
     goalArea = display.newRect( groupForeground, 0, 0, displayWidth, yOffset - wallWidth / 2 )
-    goalArea:setFillColor(0,0,1)
+    goalArea:setFillColor( unpack(global.colorGoalArea) )
     goalArea.isVisible = true
 
     marble = marble.new(groupForeground, centerX, displayHeight - yOffset / 2)
@@ -305,7 +306,7 @@ function scene:create( event )
     sceneGroup:insert(groupUI)
 
     background = display.newRect( groupBackground, 0, 0, display.contentWidth, display.contentHeight )
-    background:setFillColor( 0, 0, 0 )
+    background:setFillColor( unpack(global.colorBackground) )
     touchOverlay = display.newRect( groupUI, 0, 0, display.contentWidth, display.contentHeight )
     touchOverlay.alpha = 0.0
     touchOverlay.isHitTestable = true
