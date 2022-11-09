@@ -1,5 +1,6 @@
 local composer = require( 'composer' )
 local widget = require( 'widget' )
+local sfx = require( 'src.sounds' )
 local global = require( 'src.globalData')
  
 local scene = composer.newScene()
@@ -17,17 +18,24 @@ local background
 local btnStartGame
 local btnSoundOn
 local btnSoundOff
+local sfxBackground
+
 
 local function onPressStartGame( event )
 
+    sfxBackground.fadeOut()
     composer.gotoScene( 'scene.game', { effect = 'crossFade', time = 500 } )
-    return true
 
+    return true
 end
+
 
 local function onPressSoundOn( event )
 
     if event.target.isVisible then
+        sfxBackground.stop()
+        global.soundOn = false
+        
         event.target.isVisible = false
         btnSoundOff.isVisible = true
     end
@@ -35,9 +43,13 @@ local function onPressSoundOn( event )
     return true
 end
 
+
 local function onPressSoundOff( event )
 
     if event.target.isVisible then
+        sfxBackground.start()
+        global.soundOn = true
+
         event.target.isVisible = false
         btnSoundOn.isVisible = true
     end
@@ -51,7 +63,6 @@ function scene:create( event )
     print( '[+] Menu: CREATE' )
 
     local sceneGroup = self.view
-    -- Code here runs when the scene is first created but has not yet appeared on screen
  
     groupUI = display.newGroup()
     sceneGroup:insert(groupUI)
@@ -82,6 +93,8 @@ function scene:create( event )
     btnSoundOn:addEventListener( 'tap', onPressSoundOn )
     btnSoundOff:addEventListener( 'tap', onPressSoundOff )
 
+    sfxBackground = sfx.sfxBackgroundMenu()
+
 end
  
  
@@ -94,17 +107,12 @@ function scene:show( event )
     if ( phase == "will" ) then
 
         print( '[+] Menu: SHOW WILL' )
-
-        -- Code here runs when the scene is still off screen (but is about to come on screen)
  
     elseif ( phase == "did" ) then
 
         print( '[+] Menu: SHOW DID' )
+        sfxBackground.start()
 
-        -- Code here runs when the scene is entirely on screen
-
-
- 
     end
 end
  
@@ -119,16 +127,10 @@ function scene:hide( event )
         
         print( '[+] Menu: HIDE WILL' )
 
-        -- Code here runs when the scene is on screen (but is about to go off screen)
- 
     elseif ( phase == "did" ) then
         
         print( '[+] Menu: HIDE DID' )
 
-        
-
-        -- Code here runs immediately after the scene goes entirely off screen
- 
     end
 end
  
@@ -139,7 +141,6 @@ function scene:destroy( event )
     print( '[+] Menu: DESTROY' )
 
     local sceneGroup = self.view
-    -- Code here runs prior to the removal of scene's view
  
 end
  
