@@ -128,6 +128,7 @@ local function addPhysicsBodies()
 
     -- Maze walls
     for i = 1, groupMazeWalls.numChildren do
+        groupMazeWalls[i].name = 'wall'
         physics.addBody( groupMazeWalls[i], 'static', physicsWalls )
     end
 
