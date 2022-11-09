@@ -10,6 +10,7 @@ local M = {}
     M.colorBackground = { 0.125, 0.137, 0.18 }
 
     M.colorMarble = { 0.922, 0.055, 0.055 }
+    M.colorWalls  = { 0.949, 0.949, 0.949 }
     M.colorGoalArea   = { 0.204, 0.871, 0.192, 0.20 }
     M.colorStartArea  = { 0.192, 0.749, 0.871, 0.20 }
 
