@@ -94,32 +94,32 @@ local function drawWalls()
         local x = cell.x * cellWidth - cellWidth + xOffset
         local y = cell.y * cellWidth - cellWidth + yOffset
 
-        local lineOffset = wallWidth / 2
+        local wOffset = wallWidth / 2
 
         print(x .. "," .. y)
 
         if cell.wallNorth then
             print("NORTH")
-            local wallNorth = display.newLine(groupMazeWalls, x - lineOffset, y, x + cellWidth + lineOffset, y)
-            wallNorth.strokeWidth = wallWidth
+            local wallNorth = display.newRect(groupMazeWalls, x - wOffset, y-wOffset, cellWidth + wallWidth, wallWidth)
+            wallNorth:setFillColor( unpack(global.colorWalls) )
         end
 
         if cell.wallEast then
             print("EAST")
-            local wallEast = display.newLine(groupMazeWalls, x + cellWidth, y - lineOffset, x + cellWidth, y + cellWidth + lineOffset)
-            wallEast.strokeWidth = wallWidth
+            local wallEast = display.newRect(groupMazeWalls, x + cellWidth - wOffset, y - wOffset, wallWidth, cellWidth + wallWidth)
+            wallEast:setFillColor( unpack(global.colorWalls) )
         end
 
         if cell.wallSouth then
             print("SOUTH")
-            local wallSouth = display.newLine(groupMazeWalls, x + cellWidth + lineOffset, y + cellWidth, x - lineOffset, y + cellWidth)
-            wallSouth.strokeWidth = wallWidth
+            local wallSouth = display.newRect(groupMazeWalls, x - wOffset, y + cellWidth - wOffset, cellWidth + wallWidth, wallWidth)
+            wallSouth:setFillColor( unpack(global.colorWalls) )
         end
 
         if cell.wallWest then
             print("WEST")
-            local wallWest = display.newLine(groupMazeWalls, x, y + cellWidth + lineOffset, x, y - lineOffset)
-            wallWest.strokeWidth = wallWidth
+            local wallWeat = display.newRect(groupMazeWalls, x - wOffset, y - wOffset, wallWidth, cellWidth + wallWidth)
+            wallWeat:setFillColor( unpack(global.colorWalls) )
         end
     end
     
