@@ -1,3 +1,4 @@
+---@diagnostic disable: deprecated
 local composer = require( 'composer' )
 local physics = require( 'physics' )
 local global = require( 'src.globalData' )
@@ -30,7 +31,7 @@ local goalArea
 local wallWidth = 4
 local maze
 
-local startColumnAmount = 3
+local startColumnAmount = 5
 local levelUpStep = 2
 local currentCols = startColumnAmount
 
@@ -59,7 +60,16 @@ local function calcCellWidth()
 end
 
 local function calcRowAmount()
-    return math.floor( displayHeight / calcCellWidth() ) - 1
+
+    local rowAmount = math.floor( displayHeight / calcCellWidth() ) - 1
+    local yOffset = ( displayHeight - calcCellWidth() * rowAmount ) / 2
+    while ( yOffset < displayHeight * 0.09 ) do
+        rowAmount = rowAmount - 1
+        yOffset = ( displayHeight - calcCellWidth() * rowAmount ) / 2
+    end
+
+    return rowAmount
+
 end
 
 local function calcOffsetX()
@@ -185,7 +195,7 @@ local function nextLevel()
     end
 
     if currentCols == 15 then
-        currentCols = 3
+        currentCols = 5
     else
         currentCols = currentCols + levelUpStep
     end
