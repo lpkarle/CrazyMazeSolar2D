@@ -27,13 +27,10 @@ local M = {}
     -----------------------------------------------------------------------------------
     M.wallWidth = 10
 
-    M.textOptionsTitle = {
-        parent = groupUI,
-        text = '',
-        x = display.contentCenterX,
-        y = 400,
-        font = 'assets/fonts/PassionsConflict-Regular.ttf',
-        fontSize = 175,
-        align = 'center'
+    M.textOptionsTimer = {
+        text = '00:00',
+        font = 'src/assets/fonts/static/Raleway-Light.ttf',
+        fontSize = 14,
+        align = 'right'
     }
 return M

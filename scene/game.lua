@@ -35,6 +35,26 @@ local startColumnAmount = 5
 local levelUpStep = 2
 local currentCols = startColumnAmount
 
+local mazeTimer
+local textTimer
+local sec = 0
+local min = 0
+
+local function updateTimer( event )
+    sec = sec + 1
+
+    if (sec >= 60) then
+        min = min + 1 
+        sec = 0
+    end
+
+    local strSec = sec < 10 and '0'..sec or sec
+    local strMin = min < 10 and '0'..min or min
+
+    textTimer.text = strMin .. ':' .. strSec
+end
+          
+
 local function drawSurroundingWalls()
 
     -- North
@@ -69,7 +89,6 @@ local function calcRowAmount()
     end
 
     return rowAmount
-
 end
 
 local function calcOffsetX()
@@ -224,13 +243,11 @@ local function setupGame()
 
     physics.start()
     physics.setDrawMode( 'normal' )
-    physics.setGravity( 0, 0 ) 
+    physics.setGravity( 0, 0 )
 
     maze = Maze:new( calcRowAmount(), startColumnAmount )
     maze:generate()
 
-    local cellWidth = calcCellWidth()
-    local xOffset = calcOffsetX()
     local yOffset = calcOffsetY()
     
     startArea = display.newRect( groupForeground, 0, displayHeight - yOffset + wallWidth / 2, displayWidth, yOffset - wallWidth / 2)
@@ -266,9 +283,15 @@ end
 
 -- Game Loop
 local function enterFrame( event )
-    marbleInStartArea()
+
+    if ( not marbleInStartArea() and mazeTimer == nil) then
+        mazeTimer = timer.performWithDelay( 1000, updateTimer, -1 )
+    end
 
     if marbleInGoalArea() then
+        timer.cancel(  mazeTimer )
+        mazeTimer = nil
+        textTimer.text = ''
         nextLevel()
     end
 end
@@ -312,6 +335,10 @@ function scene:create( event )
     touchOverlay.isHitTestable = true
     touchOverlay:addEventListener( 'tap', onPressShowPauseOverlay )
 
+    textTimer = display.newText( global.textOptionsTimer )
+    textTimer.x = displayWidth - textTimer.width - 36
+    textTimer.y = 10
+
     setupGame()
 end
  
@@ -333,7 +360,7 @@ function scene:show( event )
 
         print( '[+] Game: SHOW DID' )
 
-        -- Code here runs when the scene is entirely on screen
+        
  
     end
 end
