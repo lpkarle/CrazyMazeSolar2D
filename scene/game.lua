@@ -1,4 +1,3 @@
----@diagnostic disable: deprecated
 local composer = require( 'composer' )
 local physics = require( 'physics' )
 local global = require( 'src.globalData' )
@@ -262,6 +261,10 @@ local function setupGame()
 
     drawSurroundingWalls()
     drawWalls()
+
+    textTimer = display.newText( global.textOptionsTimer )
+    textTimer.x = displayWidth - textTimer.width - 36
+    textTimer.y = 10
 end
 
 local function onPressShowPauseOverlay( event )
@@ -291,7 +294,11 @@ local function enterFrame( event )
     if marbleInGoalArea() then
         timer.cancel(  mazeTimer )
         mazeTimer = nil
-        textTimer.text = ''
+        sec = 0
+        min = 0
+        textTimer.text = '00:00'
+
+        composer.gotoScene( 'scene.cutscene' )
         nextLevel()
     end
 end
@@ -334,10 +341,6 @@ function scene:create( event )
     touchOverlay.alpha = 0.0
     touchOverlay.isHitTestable = true
     touchOverlay:addEventListener( 'tap', onPressShowPauseOverlay )
-
-    textTimer = display.newText( global.textOptionsTimer )
-    textTimer.x = displayWidth - textTimer.width - 36
-    textTimer.y = 10
 
     setupGame()
 end
