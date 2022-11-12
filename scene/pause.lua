@@ -1,5 +1,6 @@
 local composer = require( 'composer' )
- 
+local global = require( 'src.globalData' )
+
 local scene = composer.newScene()
 
 print( '[+] PAUSE: START' )
@@ -13,11 +14,41 @@ local groupUI
  
 local background
 local btnResumeGame
+local btnResumeGame
+
+local btnSoundOn
+local btnSoundOff
 
  
 local function onPressHidePauseOverlay( event )
 
     composer.hideOverlay( 'scene.pause', 400) 
+
+    return true
+end
+
+
+local function onPressSoundOn( event )
+
+    if event.target.isVisible then
+        global.soundOn = false
+        
+        event.target.isVisible = false
+        btnSoundOff.isVisible = true
+    end
+
+    return true
+end
+
+
+local function onPressSoundOff( event )
+
+    if event.target.isVisible then
+        global.soundOn = true
+
+        event.target.isVisible = false
+        btnSoundOn.isVisible = true
+    end
 
     return true
 end
@@ -33,11 +64,28 @@ function scene:create( event )
     groupUI = display.newGroup()
     sceneGroup:insert(groupUI)
 
-    background = display.newRect( groupUI, centerX, centerY, displayWidth, displayHeight )
+    background = display.newRect( groupUI, 0, 0, displayWidth, displayHeight )
+    background:setFillColor( unpack(global.colorBackground) )
 
-    btnResumeGame = display.newRect(groupUI, centerX, centerY, 200, 50)
-    btnResumeGame:setFillColor(0,1,0)
-    btnResumeGame:addEventListener( 'tap', onPressHidePauseOverlay)
+    btnResumeGame = display.newImage( groupUI, 'src/assets/icons/play.png', centerX - 50, centerY)
+    btnResumeGame:scale(0.5, 0.5)
+    btnResumeGame:addEventListener( 'tap', onPressHidePauseOverlay )
+
+    btnSoundOn = display.newImage( groupUI, 'src/assets/icons/sound-on.png', displayWidth-75, displayHeight-75 )
+    btnSoundOn:scale(0.5, 0.5)
+    btnSoundOn.anchorX = 0
+    btnSoundOn.anchorY = 0
+    btnSoundOn.enabled = global.soundOn
+    btnSoundOn:addEventListener( 'tap', onPressSoundOn )
+
+    btnSoundOff = display.newImage( groupUI, 'src/assets/icons/sound-off.png', displayWidth-75, displayHeight-75 )
+    btnSoundOff:scale(0.5, 0.5)
+    btnSoundOff.anchorX = 0
+    btnSoundOff.anchorY = 0
+    btnSoundOff.enabled = true
+    btnSoundOff.isVisible = not global.soundOn
+    btnSoundOff:addEventListener( 'tap', onPressSoundOff )
+
 end
  
  

@@ -269,18 +269,15 @@ end
 
 local function onPressShowPauseOverlay( event )
 
-    nextLevel()
-
-    --[[
     -- Stop marble movement
     physics.pause()
 
     composer.showOverlay( 'scene.pause', {
-        effect = "fade",
+        effect = 'fade',
         time = 250,
         isModal = true
     } )
-    ]]
+
     return true
 end
 

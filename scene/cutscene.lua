@@ -35,7 +35,7 @@ function scene:show(event)
 
         print('[+] Cutscene: SHOW DID')
 
-        composer.gotoScene( 'scene.game', { effect = 'crossFade', time = 1000 } )
+        composer.gotoScene( 'scene.game', { effect = 'fade', time = 1000 } )
     end
 end
 
